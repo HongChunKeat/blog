@@ -26,10 +26,38 @@ Route::group("/dapp", function () {
         plugin\dapp\app\middleware\MaintenanceMiddleware::class,
     ]);
 
-    // user
-    Route::group("/user", function () {
-        Route::get("/getProfile", [dapp\user\GetProfile::class, "index"]);
-        Route::post("/setProfile", [dapp\user\SetProfile::class, "index"]);
+    //public
+    Route::group("/public", function () {
+        // user
+        Route::group("/user", function () {
+            Route::get("/getProfile", [dapp\public\user\GetProfile::class, "index"]);
+        });
+
+        // blog
+        Route::group("/blog", function () {
+            Route::get("/listing", [dapp\public\blog\Listing::class, "index"]);
+            Route::get("/read", [dapp\public\blog\Read::class, "index"]);
+            Route::post("/viewCount", [dapp\public\blog\ViewCount::class, "index"]);
+        });
+    })->middleware([
+        plugin\dapp\app\middleware\MaintenanceMiddleware::class,
+    ]);
+
+    //private
+    Route::group("/private", function () {
+        // user
+        Route::group("/user", function () {
+            Route::post("/setProfile", [dapp\private\user\SetProfile::class, "index"]);
+        });
+
+        // blog
+        Route::group("/blog", function () {
+            Route::post("/write", [dapp\private\blog\Write::class, "index"]);
+            Route::post("/edit", [dapp\private\blog\Edit::class, "index"]);
+            Route::post("/delete", [dapp\private\blog\Delete::class, "index"]);
+            Route::get("/listing", [dapp\private\blog\Listing::class, "index"]);
+            Route::get("/read", [dapp\private\blog\Read::class, "index"]);
+        });
     })->middleware([
         plugin\dapp\app\middleware\JwtAuthMiddleware::class,
         plugin\dapp\app\middleware\MaintenanceMiddleware::class,

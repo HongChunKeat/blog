@@ -1,6 +1,6 @@
 <?php
 
-namespace plugin\dapp\app\controller\user;
+namespace plugin\dapp\app\controller\private\user;
 
 # library
 use plugin\dapp\app\controller\Base;
@@ -14,12 +14,16 @@ class SetProfile extends Base
 {
     # [validation-rule]
     protected $rule = [
+        "avatar" => "max:100",
+        "intro" => "",
         "web3_address" => "length:42|alphaNum",
-        "nickname" => "max:20",
+        "nickname" => "require|max:20",
     ];
 
     # [inputs-pattern]
     protected $patternInputs = [
+        "avatar",
+        "intro",
         "web3_address",
         "nickname",
     ];
@@ -61,7 +65,7 @@ class SetProfile extends Base
             }
 
             # [result]
-            if ($res) {                
+            if ($res) {
                 LogUserModel::log($request, "set_profile");
                 $this->response = [
                     "success" => true,
@@ -81,36 +85,16 @@ class SetProfile extends Base
             if (!$user) {
                 $this->error[] = "user:missing";
             } else {
-                if (isset($params["nickname"])) {
-                    if (AccountUserModel::where("nickname", $params["nickname"])->whereNot("id", $params["uid"])->first()) {
-                        $this->error[] = "nickname:exists";
-                    }
-                }
                 if (isset($params["web3_address"])) {
                     if (AccountUserModel::where("web3_address", $params["web3_address"])->whereNot("id", $params["uid"])->first()) {
                         $this->error[] = "web3_address:exists";
                     }
                 }
-                // if (isset($params["telegram"])) {
-                //     if (AccountUserModel::where("telegram", $params["telegram"])->whereNot("id", $params["uid"])->first()) {
-                //         $this->error[] = "telegram:exists";
-                //     }
-                // }
-                // if (isset($params["discord"])) {
-                //     if (AccountUserModel::where("discord", $params["discord"])->whereNot("id", $params["uid"])->first()) {
-                //         $this->error[] = "discord:exists";
-                //     }
-                // }
-                // if (isset($params["twitter"])) {
-                //     if (AccountUserModel::where("twitter", $params["twitter"])->whereNot("id", $params["uid"])->first()) {
-                //         $this->error[] = "twitter:exists";
-                //     }
-                // }
-                // if (isset($params["google"])) {
-                //     if (AccountUserModel::where("google", $params["google"])->whereNot("id", $params["uid"])->first()) {
-                //         $this->error[] = "google:exists";
-                //     }
-                // }
+                if (isset($params["nickname"])) {
+                    if (AccountUserModel::where("nickname", $params["nickname"])->whereNot("id", $params["uid"])->first()) {
+                        $this->error[] = "nickname:exists";
+                    }
+                }
             }
         }
 

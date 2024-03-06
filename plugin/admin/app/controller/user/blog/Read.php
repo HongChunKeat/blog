@@ -19,6 +19,7 @@ class Read extends Base
         "sn",
         "created_at",
         "updated_at",
+        "removed_at",
         "uid",
         "user",
         "main_image",

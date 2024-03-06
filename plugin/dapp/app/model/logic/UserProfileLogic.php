@@ -4,15 +4,9 @@ namespace plugin\dapp\app\model\logic;
 
 # system lib
 use support\Redis;
-use support\Log;
 use Tinywan\Jwt\JwtToken;
 # database & logic
 use app\model\database\AccountUserModel;
-use app\model\database\UserStaminaModel;
-use app\model\database\UserLevelModel;
-use app\model\database\UserMissionModel;
-use app\model\database\UserInventoryModel;
-use app\model\database\NetworkSponsorModel;
 use plugin\dapp\app\model\logic\SecureLogic;
 use app\model\logic\HelperLogic;
 use app\model\logic\SettingLogic;
@@ -184,100 +178,5 @@ class UserProfileLogic
         }
 
         return $response;
-    }
-
-    public static function init($id)
-    {
-        $level = SettingLogic::get("level", ["level" => 1]);
-
-        // user level
-        UserLevelModel::create([
-            "uid" => $id,
-            "level" => $level ? $level["level"] : 1,
-            "pet_slots" => $level ? $level["pet_slots"] : 0,
-            "inventory_pages" => $level ? $level["inventory_pages"] : 1,
-            "is_current" => 1
-        ]);
-
-        // user stamina
-        UserStaminaModel::create([
-            "uid" => $id,
-            "current_stamina" => $level ? $level["stamina"] : 10,
-            "max_stamina" => $level ? $level["stamina"] : 10,
-            "usage" => 1
-        ]);
-
-        // create level 1 mission for tutorial
-        $date = date("Y-m-d H:i:s");
-        $pending = SettingLogic::get("operator", ["code" => "pending"]);
-        $list = SettingLogic::get("mission", ["level" => 0], true);
-
-        $bulk = [];
-        foreach ($list as $row) {
-            $bulk[] = [
-                "sn" => HelperLogic::generateUniqueSN("user_mission"),
-                "created_at" => $date,
-                "updated_at" => $date,
-                "uid" => $id,
-                "mission_id" => $row["id"],
-                "status" => $pending["id"],
-            ];
-        }
-        UserMissionModel::insert($bulk);
-    }
-
-    public static function delete($id)
-    {
-        UserStaminaModel::where("uid", $id)->delete();
-        UserLevelModel::where("uid", $id)->delete();
-        UserMissionModel::where("uid", $id)->delete();
-    }
-
-    public static function getCountdown($interval)
-    {
-        $currentHour = date("G"); // 24-hour format
-        $currentMinute = date("i");
-
-        // Convert to minutes since midnight
-        $minutesSinceMidnight = ($currentHour * 60) + $currentMinute;
-
-        // Calculate the time left until the next minute interval
-        $timeLeft = date("Y-m-d H:i:00", strtotime("+" . ($interval - ($minutesSinceMidnight % $interval)) . " minutes"));
-        $countdown = strtotime($timeLeft) - time();
-
-        return $countdown;
-    }
-
-    public static function bindUpline(int $userId = 0, int $uplineId = null)
-    {
-        $_response = false;
-
-        //default null
-        if ($uplineId !== null) {
-            //get upline
-            $uplineNetwork = NetworkSponsorModel::where("uid", $uplineId)->first();
-
-            //if upline is verfied
-            if ($uplineNetwork) {
-                //check user exist in network or not
-                $userNetwork = NetworkSponsorModel::where("uid", $userId)->first();
-
-                //if exist then update, else create
-                if ($userNetwork) {
-                    $_response = NetworkSponsorModel::where("uid", $userId)->update(["upline_uid" => $uplineId]);
-                } else {
-                    $_response = NetworkSponsorModel::create(["uid" => $userId, "upline_uid" => $uplineId]);
-                }
-            }
-        } else {
-            // for root user, if got 1 person only then is root because already created
-            if (AccountUserModel::count("id") == 1) {
-                NetworkSponsorModel::create(["uid" => $userId, "upline_uid" => 0]);
-            }
-
-            $_response = true;
-        }
-
-        return $_response;
     }
 }

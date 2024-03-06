@@ -33,6 +33,8 @@ class Listing extends Base
         "created_at_end" => "date",
         "updated_at_start" => "date",
         "updated_at_end" => "date",
+        "removed_at_start" => "date",
+        "removed_at_end" => "date",
     ];
 
     # [inputs-pattern]
@@ -58,6 +60,7 @@ class Listing extends Base
         "sn",
         "created_at",
         "updated_at",
+        "removed_at",
         "uid",
         "user",
         "main_image",
@@ -94,7 +97,7 @@ class Listing extends Base
             # [search date range]
             $cleanVars = array_merge(
                 $cleanVars,
-                HelperLogic::buildDateSearch($request, ["created_at", "updated_at"])
+                HelperLogic::buildDateSearch($request, ["created_at", "updated_at","removed_at"])
             );
 
             # [listing query]

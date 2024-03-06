@@ -18,7 +18,7 @@ class Listing extends Base
         "avatar" => "max:100",
         "intro" => "",
         "web3_address" => "length:42|alphaNum",
-        "nickname" => "",
+        "nickname" => "max:20",
         "login_id" => "min:8|max:15",
         "tag" => "",
         "status" => "in:active,inactivated,freezed,suspended",

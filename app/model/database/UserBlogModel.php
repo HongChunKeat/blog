@@ -47,4 +47,13 @@ class UserBlogModel extends DbBase
     {
         return TimeHelper::format("Y-m-d H:i:s", $value);
     }
+
+    public static function defaultWhere($specifiedTable = "")
+    {
+        if (!empty($specifiedTable)) {
+            $specifiedTable = $specifiedTable . ".";
+        }
+
+        return self::whereNull($specifiedTable . "removed_at");
+    }
 }

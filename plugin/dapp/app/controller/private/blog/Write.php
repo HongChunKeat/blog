@@ -1,47 +1,37 @@
 <?php
 
-namespace plugin\admin\app\controller\user\blog;
+namespace plugin\dapp\app\controller\private\blog;
 
 # library
-use plugin\admin\app\controller\Base;
+use plugin\dapp\app\controller\Base;
 use support\Request;
 # database & logic
-use app\model\database\LogAdminModel;
-use app\model\database\UserBlogModel;
+use app\model\database\LogUserModel;
 use app\model\database\AccountUserModel;
-use app\model\database\SettingOperatorModel;
+use app\model\database\UserBlogModel;
 use app\model\logic\HelperLogic;
+use app\model\logic\SettingLogic;
 
-class Create extends Base
+class Write extends Base
 {
     # [validation-rule]
     protected $rule = [
-        "uid" => "require|number|max:11",
         "main_image" => "max:500",
         "image" => "max:2000",
         "title" => "require",
         "summary" => "max:150",
-        "content" => "max:50000",
+        "content" => "require|max:50000",
         "tag" => "max:100",
-        "status" => "require|number|max:11",
-        "views" => "number|egt:0|max:11",
-        "remark" => "",
-        "removed_at" => "date",
     ];
 
     # [inputs-pattern]
     protected $patternInputs = [
-        "uid",
         "main_image",
         "image",
         "title",
         "summary",
         "content",
         "tag",
-        "status",
-        "views",
-        "remark",
-        "removed_at"
     ];
 
     public function index(Request $request)
@@ -52,11 +42,14 @@ class Create extends Base
         # [clean variables]
         $cleanVars = HelperLogic::cleanParams($request->post(), $this->patternInputs);
 
+        # user id
+        $cleanVars["uid"] = $request->visitor["id"];
+
         # [checking]
         $this->checking($cleanVars);
 
         # [proceed]
-        if (!count($this->error)) {
+        if (!count($this->error) && ($this->successTotalCount == $this->successPassedCount)) {
             $res = "";
 
             # [process]
@@ -71,13 +64,15 @@ class Create extends Base
                     $cleanVars["tag"] = json_encode($cleanVars["tag"]);
                 }
 
+                $pending = SettingLogic::get("operator", ["code" => "pending"]);
+                $cleanVars["status"] = $pending["id"];
                 $cleanVars["sn"] = HelperLogic::generateUniqueSN("user_blog");
                 $res = UserBlogModel::create($cleanVars);
             }
 
             # [result]
             if ($res) {
-                LogAdminModel::log($request, "create", "user_blog", $res["id"]);
+                LogUserModel::log($request, "blog_create");
                 $this->response = [
                     "success" => true,
                 ];
@@ -90,23 +85,16 @@ class Create extends Base
 
     private function checking(array $params = [])
     {
+        # [init success condition]
+        $this->successTotalCount = 1;
+
         # [condition]
-        // check uid
         if (isset($params["uid"])) {
-            if (!AccountUserModel::where("id", $params["uid"])->first()) {
-                $this->error[] = "uid:invalid";
-            }
-        }
-
-        //check status
-        if (isset($params["status"])) {
-            $statusList = SettingOperatorModel::where("category", "status")
-                ->whereIn("code", ["pending", "approved", "rejected"])
-                ->get()
-                ->toArray();
-
-            if (!in_array($params["status"], array_column($statusList, "id"))) {
-                $this->error[] = "status:invalid";
+            $user = AccountUserModel::where(["id" => $params["uid"], "status" => "active"])->first();
+            if (!$user) {
+                $this->error[] = "user:missing";
+            } else {
+                $this->successPassedCount++;
             }
         }
     }

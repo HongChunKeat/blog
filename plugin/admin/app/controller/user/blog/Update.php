@@ -26,6 +26,7 @@ class Update extends Base
         "status" => "number|max:11",
         "views" => "number|egt:0|max:11",
         "remark" => "",
+        "removed_at" => "date",
     ];
 
     # [inputs-pattern]
@@ -40,6 +41,7 @@ class Update extends Base
         "status",
         "views",
         "remark",
+        "removed_at"
     ];
 
     public function index(Request $request, int $targetId = 0)

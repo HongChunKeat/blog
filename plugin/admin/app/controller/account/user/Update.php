@@ -17,7 +17,7 @@ class Update extends Base
         "avatar" => "max:100",
         "intro" => "",
         "web3_address" => "length:42|alphaNum",
-        "nickname" => "max:50",
+        "nickname" => "max:20",
         "password" => "min:8|max:16",
         "login_id" => "min:8|max:15",
         "tag" => "",
