@@ -5,14 +5,14 @@ namespace app\model\database;
 use app\model\database\DbBase;
 use zjkal\TimeHelper;
 
-class UserWithdrawModel extends DbBase
+class UserBlogModel extends DbBase
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = "user_withdraw";
+    protected $table = "user_blog";
 
     /**
      * The primary key associated with the table.

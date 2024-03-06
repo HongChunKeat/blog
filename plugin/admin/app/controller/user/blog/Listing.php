@@ -8,11 +8,8 @@ use plugin\admin\app\controller\Base;
 # database & logic
 use plugin\dapp\app\model\logic\UserProfileLogic;
 use app\model\database\AccountUserModel;
-use app\model\database\SettingGachaModel;
-use app\model\database\SettingPetModel;
-use app\model\database\SettingItemModel;
-use app\model\database\SettingWalletModel;
-use app\model\database\UserGachaModel;
+use app\model\database\SettingOperatorModel;
+use app\model\database\UserBlogModel;
 use app\model\logic\HelperLogic;
 
 class Listing extends Base
@@ -20,15 +17,17 @@ class Listing extends Base
     # [validation-rule]
     protected $rule = [
         "id" => "number|max:11",
+        "sn" => "",
         "uid" => "number|max:11",
         "user" => "",
-        "gacha" => "number|max:11",
-        "pet" => "number|max:11",
-        "item" => "number|max:11",
-        "wallet" => "number|max:11",
-        "token_reward" => "float|max:11",
-        "ref_table" => "",
-        "ref_id" => "number|max:11",
+        "main_image" => "max:500",
+        "image" => "max:2000",
+        "title" => "",
+        "summary" => "max:150",
+        "content" => "max:50000",
+        "tag" => "max:100",
+        "status" => "number|max:11",
+        "views" => "number|egt:0|max:11",
         "remark" => "",
         "created_at_start" => "date",
         "created_at_end" => "date",
@@ -39,32 +38,36 @@ class Listing extends Base
     # [inputs-pattern]
     protected $patternInputs = [
         "id",
+        "sn",
         "uid",
         "user",
-        "gacha",
-        "pet",
-        "item",
-        "wallet",
-        "token_reward",
-        "ref_table",
-        "ref_id",
+        "main_image",
+        "image",
+        "title",
+        "summary",
+        "content",
+        "tag",
+        "status",
+        "views",
         "remark",
     ];
 
     # [outputs-pattern]
     protected $patternOutputs = [
         "id",
+        "sn",
         "created_at",
         "updated_at",
         "uid",
         "user",
-        "gacha",
-        "pet",
-        "item",
-        "wallet",
-        "token_reward",
-        "ref_table",
-        "ref_id",
+        "main_image",
+        "image",
+        "title",
+        "summary",
+        "content",
+        "tag",
+        "status",
+        "views",
         "remark",
     ];
 
@@ -78,7 +81,6 @@ class Listing extends Base
 
         # [proceed]
         if (!count($this->error)) {
-
             # [search join table columns]
             if (isset($cleanVars["user"])) {
                 // 4 in 1 search
@@ -86,37 +88,17 @@ class Listing extends Base
                 $cleanVars["uid"] = $user["id"] ?? 0;
             }
 
-            if (isset($cleanVars["gacha"])) {
-                $cleanVars["gacha_id"] = $cleanVars["gacha"];
-            }
-
-            if (isset($cleanVars["pet"])) {
-                $cleanVars["pet_id"] = $cleanVars["pet"];
-            }
-
-            if (isset($cleanVars["item"])) {
-                $cleanVars["item_id"] = $cleanVars["item"];
-            }
-
-            if (isset($cleanVars["wallet"])) {
-                $cleanVars["wallet_id"] = $cleanVars["wallet"];
-            }
-
             # [unset key]
             unset($cleanVars["user"]);
-            unset($cleanVars["gacha"]);
-            unset($cleanVars["pet"]);
-            unset($cleanVars["item"]);
-            unset($cleanVars["wallet"]);
 
             # [search date range]
             $cleanVars = array_merge(
-                $cleanVars, 
+                $cleanVars,
                 HelperLogic::buildDateSearch($request, ["created_at", "updated_at"])
             );
 
             # [listing query]
-            $res = UserGachaModel::listing(
+            $res = UserBlogModel::listing(
                 $cleanVars,
                 ["*"],
                 ["id", "desc"]
@@ -129,23 +111,8 @@ class Listing extends Base
                     $user = AccountUserModel::where("id", $row["uid"])->first();
                     $row["user"] = $user ? $user["user_id"] : "";
 
-                    $gacha = SettingGachaModel::where("id", $row["gacha_id"])->first();
-                    $row["gacha"] = $gacha ? $gacha["name"] : "";
-
-                    if (isset($row["pet_id"])) {
-                        $pet = SettingPetModel::where("id", $row["pet_id"])->first();
-                        $row["pet"] = $pet ? $pet["name"] : "";
-                    }
-
-                    if (isset($row["item_id"])) {
-                        $item = SettingItemModel::where("id", $row["item_id"])->first();
-                        $row["item"] = $item ? $item["name"] : "";
-                    }
-
-                    if (isset($row["wallet_id"])) {
-                        $wallet = SettingWalletModel::where("id", $row["wallet_id"])->first();
-                        $row["wallet"] = $wallet ? $wallet["code"] : "";
-                    }
+                    $status = SettingOperatorModel::where("id", $row["status"])->first();
+                    $row["status"] = $status ? $status["code"] : "";
                 }
 
                 $this->response = [

@@ -7,12 +7,9 @@ use plugin\admin\app\controller\Base;
 use support\Request;
 # database & logic
 use app\model\database\LogAdminModel;
-use app\model\database\UserGachaModel;
+use app\model\database\UserBlogModel;
 use app\model\database\AccountUserModel;
-use app\model\database\SettingGachaModel;
-use app\model\database\SettingPetModel;
-use app\model\database\SettingItemModel;
-use app\model\database\SettingWalletModel;
+use app\model\database\SettingOperatorModel;
 use app\model\logic\HelperLogic;
 
 class Update extends Base
@@ -20,26 +17,28 @@ class Update extends Base
     # [validation-rule]
     protected $rule = [
         "uid" => "number|max:11",
-        "gacha" => "number|max:11",
-        "pet" => "number|max:11",
-        "item" => "number|max:11",
-        "wallet" => "number|max:11",
-        "token_reward" => "float|max:11",
-        "ref_table" => "",
-        "ref_id" => "number|max:11",
+        "main_image" => "max:500",
+        "image" => "max:2000",
+        "title" => "",
+        "summary" => "max:150",
+        "content" => "max:50000",
+        "tag" => "max:100",
+        "status" => "number|max:11",
+        "views" => "number|egt:0|max:11",
         "remark" => "",
     ];
 
     # [inputs-pattern]
     protected $patternInputs = [
         "uid",
-        "gacha",
-        "pet",
-        "item",
-        "wallet",
-        "token_reward",
-        "ref_table",
-        "ref_id",
+        "main_image",
+        "image",
+        "title",
+        "summary",
+        "content",
+        "tag",
+        "status",
+        "views",
         "remark",
     ];
 
@@ -60,34 +59,22 @@ class Update extends Base
 
             # [process]
             if (count($cleanVars) > 0) {
-                if (!empty($cleanVars["gacha"])) {
-                    $cleanVars["gacha_id"] = $cleanVars["gacha"];
-                }
-    
-                if (!empty($cleanVars["pet"])) {
-                    $cleanVars["pet_id"] = $cleanVars["pet"];
-                }
-    
-                if (!empty($cleanVars["item"])) {
-                    $cleanVars["item_id"] = $cleanVars["item"];
-                }
-                
-                if (!empty($cleanVars["wallet"])) {
-                    $cleanVars["wallet_id"] = $cleanVars["wallet"];
+                if (!empty($cleanVars["image"])) {
+                    $cleanVars["image"] = HelperLogic::explodeParams($cleanVars["image"]);
+                    $cleanVars["image"] = json_encode($cleanVars["image"]);
                 }
 
-                # [unset key]
-                unset($cleanVars["gacha"]);
-                unset($cleanVars["pet"]);
-                unset($cleanVars["item"]);
-                unset($cleanVars["wallet"]);
+                if (!empty($cleanVars["tag"])) {
+                    $cleanVars["tag"] = HelperLogic::explodeParams($cleanVars["tag"]);
+                    $cleanVars["tag"] = json_encode($cleanVars["tag"]);
+                }
 
-                $res = UserGachaModel::where("id", $targetId)->update($cleanVars);
+                $res = UserBlogModel::where("id", $targetId)->update($cleanVars);
             }
 
             # [result]
             if ($res) {
-                LogAdminModel::log($request, "update", "user_gacha", $targetId);
+                LogAdminModel::log($request, "update", "user_blog", $targetId);
                 $this->response = [
                     "success" => true,
                 ];
@@ -108,31 +95,15 @@ class Update extends Base
             }
         }
 
-        // check gacha
-        if (!empty($params["gacha"])) {
-            if (!SettingGachaModel::where("id", $params["gacha"])->first()) {
-                $this->error[] = "gacha:invalid";
-            }
-        }
+        //check status
+        if (!empty($params["status"])) {
+            $statusList = SettingOperatorModel::where("category", "status")
+                ->whereIn("code", ["pending", "approved", "rejected"])
+                ->get()
+                ->toArray();
 
-        // check pet
-        if (!empty($params["pet"])) {
-            if (!SettingPetModel::where("id", $params["pet"])->first()) {
-                $this->error[] = "pet:invalid";
-            }
-        }
-
-        // check item
-        if (!empty($params["item"])) {
-            if (!SettingItemModel::where("id", $params["item"])->first()) {
-                $this->error[] = "item:invalid";
-            }
-        }
-
-        // check wallet
-        if (!empty($params["wallet"])) {
-            if (!SettingWalletModel::where("id", $params["wallet"])->first()) {
-                $this->error[] = "wallet:invalid";
+            if (!in_array($params["status"], array_column($statusList, "id"))) {
+                $this->error[] = "status:invalid";
             }
         }
     }

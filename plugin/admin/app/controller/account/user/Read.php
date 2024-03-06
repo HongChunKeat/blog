@@ -16,6 +16,7 @@ class Read extends Base
         "id",
         "user_id",
         "avatar",
+        "intro",
         "web3_address",
         "nickname",
         "login_id",
